@@ -22,6 +22,19 @@ type _Station struct {
 	Regions  []*Region `json:"regions,omitempty"`
 }
 
+func NewStation(id string, name string, location *Location, regions []*Region) Station {
+	return Station{
+		_Station: _Station{
+			Type:     "station",
+			Id:       id,
+			Name:     name,
+			Location: location,
+			Regions:  regions,
+		},
+		Partial:  false,
+	}
+}
+
 // as it is optional to give either station id or Station object,
 // we have to unmarshal|marshal it ourselves.
 func (w *Station) UnmarshalJSON(data []byte) error {

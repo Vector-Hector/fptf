@@ -24,6 +24,18 @@ type _Region struct {
 	Stations []*Station `json:"stations"`
 }
 
+func NewRegion(id string, name string, stations []*Station) Region {
+	return Region{
+		_Region: _Region{
+			Type:     "region",
+			Id:       id,
+			Name:     name,
+			Stations: stations,
+		},
+		Partial: false,
+	}
+}
+
 // as it is optional to give either region id or Region object,
 // we have to unmarshal|marshal it ourselves.
 func (w *Region) UnmarshalJSON(data []byte) error {

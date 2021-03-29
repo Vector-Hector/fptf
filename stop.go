@@ -23,6 +23,20 @@ type _Stop struct {
 	Location *Location `json:"location,omitempty"`
 }
 
+// Creates a new stop
+func NewStop(id string, name string, station *Station, location *Location) Stop {
+	return Stop{
+		_Stop{
+			Type:     "stop",
+			Id:       id,
+			Name:     name,
+			Station:  station,
+			Location: location,
+		},
+		false,
+	}
+}
+
 // as it is optional to give either line id or Line object,
 // we have to unmarshal|marshal it ourselves.
 func (w *Stop) UnmarshalJSON(data []byte) error {

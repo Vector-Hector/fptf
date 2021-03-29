@@ -17,6 +17,22 @@ type _Line struct {
 	Operator *Operator `json:"operator"`
 }
 
+func NewLine(id string, name string, mode Mode, subMode string,
+	routes []*Route, operator *Operator) Line {
+	return Line{
+		_Line:   _Line{
+			Type:     "line",
+			Id:       id,
+			Name:     name,
+			Mode:     mode,
+			SubMode:  subMode,
+			Routes:   routes,
+			Operator: operator,
+		},
+		Partial: false,
+	}
+}
+
 // as it is optional to give either line id or Line object,
 // we have to unmarshal|marshal it ourselves.
 func (w *Line) UnmarshalJSON(data []byte) error {

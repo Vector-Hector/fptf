@@ -22,6 +22,27 @@ type _Schedule struct {
 	Starts   []TimeUnix         `json:"starts"`
 }
 
+func NewSchedule(
+	id string,
+	route *Route,
+	mode Mode,
+	subMode string,
+	sequence []*SequenceElement,
+	starts []TimeUnix) Schedule {
+	return Schedule{
+		_Schedule: _Schedule{
+			Type:     "schedule",
+			Id:       id,
+			Route:    route,
+			Mode:     mode,
+			SubMode:  subMode,
+			Sequence: sequence,
+			Starts:   starts,
+		},
+		Partial:   false,
+	}
+}
+
 type SequenceElement struct {
 	Arrival   int64 `json:"arrival"`
 	Departure int64 `json:"departure"`

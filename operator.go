@@ -13,6 +13,17 @@ type _Operator struct {
 	Name string `json:"name"`
 }
 
+func NewOperator(id string, name string) Operator {
+	return Operator{
+		_Operator: _Operator{
+			Type: "operator",
+			Id:   id,
+			Name: name,
+		},
+		Partial:   false,
+	}
+}
+
 // as it is optional to give either operator id or Operator object,
 // we have to unmarshal|marshal it ourselves.
 func (w *Operator) UnmarshalJSON(data []byte) error {
