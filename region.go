@@ -13,27 +13,37 @@ import "encoding/json"
 //
 // A Station can be part of multiple Region's.
 type Region struct {
-	_Region
-	Partial bool `json:"-"` // only show the id in the json response?
+	Id       string
+	Name     string
+	Stations []*Station
+	Meta     interface{} // any additional data
+
+	Partial bool // only show the id in the json response?
 }
 
-type _Region struct {
-	Type     string     `json:"type"`
-	Id       string     `json:"id"`
-	Name     string     `json:"name"`
-	Stations []*Station `json:"stations"`
+type mRegion struct {
+	typed
+	Id       string      `json:"id"`
+	Name     string      `json:"name"`
+	Stations []*Station  `json:"stations"`
+	Meta     interface{} `json:"meta,omitempty"`
 }
 
-func NewRegion(id string, name string, stations []*Station) Region {
-	return Region{
-		_Region: _Region{
-			Type:     "region",
-			Id:       id,
-			Name:     name,
-			Stations: stations,
-		},
-		Partial: false,
+func (w *Region) toM() *mRegion {
+	return &mRegion{
+		typed:    typedRegion,
+		Id:       w.Id,
+		Name:     w.Name,
+		Stations: w.Stations,
+		Meta:     w.Meta,
 	}
+}
+
+func (w *Region) fromM(m *mRegion) {
+	w.Id = m.Id
+	w.Name = m.Name
+	w.Stations = m.Stations
+	w.Meta = m.Meta
 }
 
 // as it is optional to give either region id or Region object,
@@ -46,12 +56,18 @@ func (w *Region) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 	w.Partial = false
-	return json.Unmarshal(data, &w._Region)
+	var m mRegion
+	err := json.Unmarshal(data, &m)
+	if err != nil {
+		return err
+	}
+	w.fromM(&m)
+	return nil
 }
 
 func (w *Region) MarshalJSON() ([]byte, error) {
 	if w.Partial {
 		return json.Marshal(w.Id)
 	}
-	return json.Marshal(w._Region)
+	return json.Marshal(w.toM())
 }

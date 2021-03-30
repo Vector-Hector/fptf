@@ -4,7 +4,10 @@ This is a implementation
 of [fptf](https://github.com/public-transport/friendly-public-transport-format/blob/1.2.1/spec/readme.md)
 in golang.
 
-Its just a collection of types, really. But since fptf requires some optional
+This package is just a collection of types and (un)marshall functions, really.
+But since fptf requires some optional stuff (e.g. stops can be objects or strings), 
+you'd kind of have to add a lot of functions to your types. \
+This package takes care of that. 
 
 ## Usage
 

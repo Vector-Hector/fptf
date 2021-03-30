@@ -3,34 +3,49 @@ package fptf
 import "encoding/json"
 
 type Line struct {
-	_Line
-	Partial bool `json:"-"` // only show the id in the json response?
+	Id       string
+	Name     string
+	Mode     Mode
+	SubMode  string
+	Routes   []*Route
+	Operator *Operator
+	Meta     interface{} // any additional data
+
+	Partial bool // only show the id in the json response?
 }
 
-type _Line struct {
-	Type     string    `json:"type"`
-	Id       string    `json:"id"`
-	Name     string    `json:"name"`
-	Mode     Mode      `json:"mode"`
-	SubMode  string    `json:"subMode,omitempty"`
-	Routes   []*Route  `json:"routes,omitempty"`
-	Operator *Operator `json:"operator"`
+type mLine struct {
+	typed
+	Id       string      `json:"id"`
+	Name     string      `json:"name"`
+	Mode     Mode        `json:"mode"`
+	SubMode  string      `json:"subMode,omitempty"`
+	Routes   []*Route    `json:"routes,omitempty"`
+	Operator *Operator   `json:"operator"`
+	Meta     interface{} `json:"meta,omitempty"`
 }
 
-func NewLine(id string, name string, mode Mode, subMode string,
-	routes []*Route, operator *Operator) Line {
-	return Line{
-		_Line:   _Line{
-			Type:     "line",
-			Id:       id,
-			Name:     name,
-			Mode:     mode,
-			SubMode:  subMode,
-			Routes:   routes,
-			Operator: operator,
-		},
-		Partial: false,
+func (w *Line) toM() *mLine {
+	return &mLine{
+		typed:    typedLine,
+		Id:       w.Id,
+		Name:     w.Name,
+		Mode:     w.Mode,
+		SubMode:  w.SubMode,
+		Routes:   w.Routes,
+		Operator: w.Operator,
+		Meta:     w.Meta,
 	}
+}
+
+func (w *Line) fromM(m *mLine) {
+	w.Id = m.Id
+	w.Name = m.Name
+	w.Mode = m.Mode
+	w.SubMode = m.SubMode
+	w.Routes = m.Routes
+	w.Operator = m.Operator
+	w.Meta = m.Meta
 }
 
 // as it is optional to give either line id or Line object,
@@ -43,12 +58,18 @@ func (w *Line) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 	w.Partial = false
-	return json.Unmarshal(data, &w._Line)
+	var m mLine
+	err := json.Unmarshal(data, &m)
+	if err != nil {
+		return err
+	}
+	w.fromM(&m)
+	return nil
 }
 
 func (w *Line) MarshalJSON() ([]byte, error) {
 	if w.Partial {
 		return json.Marshal(w.Id)
 	}
-	return json.Marshal(w._Line)
+	return json.Marshal(w.toM())
 }

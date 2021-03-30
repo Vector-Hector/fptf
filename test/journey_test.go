@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/Vector-Hector/friendly-public-transport-format"
 	"io/ioutil"
-	"reflect"
 	"testing"
 )
 
@@ -53,16 +52,17 @@ func testRewriteJourney(t *testing.T, file string) {
 		t.Error(err)
 	}
 
-	fmt.Println("Remarshalled", file, ":")
-	fmt.Println(string(remarshalledDat))
-
 	var journeyRawObj interface{}
 	err = json.Unmarshal(rawDat, &journeyRawObj)
+	if err != nil {t.Error(err)}
 
 	var remarshalledRawObj interface{}
 	err = json.Unmarshal(remarshalledDat, &remarshalledRawObj)
+	if err != nil {t.Error(err)}
 
-	if reflect.DeepEqual(journeyRawObj, remarshalledRawObj) {
+		fmt.Println("Remarshalled", file, ":")
+		fmt.Println(string(remarshalledDat))
+	if !deepEqual(journeyRawObj, remarshalledRawObj) {
 		t.Error("Marshalling the parsed data did not give the original data")
 	}
 }

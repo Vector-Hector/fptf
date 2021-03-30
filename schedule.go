@@ -7,45 +7,55 @@ import "encoding/json"
 // consumability. It is specifically geared towards urban public
 // transport, with frequent trains and homogenous travels.
 type Schedule struct {
-	_Schedule
+	Id       string
+	Route    *Route
+	Mode     Mode
+	SubMode  string
+	Sequence []*SequenceElement
+	Starts   []TimeUnix
+	Meta     interface{} // any additional data
 
-	Partial bool `json:"-"` // only show the id in the json response?
+	Partial bool // only show the id in the json response?
 }
 
-type _Schedule struct {
-	Type     string             `json:"type"`
+type SequenceElement struct {
+	Arrival   int64 `json:"arrival"`
+	Departure int64 `json:"departure"`
+}
+
+// used by marshal
+type mSchedule struct {
+	typed
 	Id       string             `json:"id"`
 	Route    *Route             `json:"route"`
 	Mode     Mode               `json:"mode,omitempty"`
 	SubMode  string             `json:"subMode,omitempty"`
 	Sequence []*SequenceElement `json:"sequence"`
 	Starts   []TimeUnix         `json:"starts"`
+	Meta     interface{}        `json:"meta,omitempty"`
 }
 
-func NewSchedule(
-	id string,
-	route *Route,
-	mode Mode,
-	subMode string,
-	sequence []*SequenceElement,
-	starts []TimeUnix) Schedule {
-	return Schedule{
-		_Schedule: _Schedule{
-			Type:     "schedule",
-			Id:       id,
-			Route:    route,
-			Mode:     mode,
-			SubMode:  subMode,
-			Sequence: sequence,
-			Starts:   starts,
-		},
-		Partial:   false,
+func (w *Schedule) toM() *mSchedule {
+	return &mSchedule{
+		typed:    typedSchedule,
+		Id:       w.Id,
+		Route:    w.Route,
+		Mode:     w.Mode,
+		SubMode:  w.SubMode,
+		Sequence: w.Sequence,
+		Starts:   w.Starts,
+		Meta:     w.Meta,
 	}
 }
 
-type SequenceElement struct {
-	Arrival   int64 `json:"arrival"`
-	Departure int64 `json:"departure"`
+func (w *Schedule) fromM(m *mSchedule) {
+	w.Id = m.Id
+	w.Route = m.Route
+	w.Mode = m.Mode
+	w.SubMode = m.SubMode
+	w.Sequence = m.Sequence
+	w.Starts = m.Starts
+	w.Meta = m.Meta
 }
 
 // as it is optional to give either schedule id or Schedule object,
@@ -58,12 +68,18 @@ func (w *Schedule) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 	w.Partial = false
-	return json.Unmarshal(data, &w._Schedule)
+	var m mSchedule
+	err := json.Unmarshal(data, &m)
+	if err != nil {
+		return err
+	}
+	w.fromM(&m)
+	return nil
 }
 
 func (w *Schedule) MarshalJSON() ([]byte, error) {
 	if w.Partial {
 		return json.Marshal(w.Id)
 	}
-	return json.Marshal(w._Schedule)
+	return json.Marshal(w.toM())
 }
