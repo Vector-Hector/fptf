@@ -23,41 +23,51 @@ func (s *Stop) ToStopStation() *StopStation {
 	}
 }
 
+func (s *StopStation) GetLocation() *Location {
+	if s.Stop != nil {
+		return s.Stop.Location
+	}
+	if s.Station != nil {
+		return s.Station.Location
+	}
+	return nil
+}
+
 // as it is optional to give either stop|station id or Stop or Station object,
 // we have to unmarshal|marshal it ourselves.
-func (w *StopStation) UnmarshalJSON(data []byte) error {
+func (s *StopStation) UnmarshalJSON(data []byte) error {
 	var id string
 	if err := json.Unmarshal(data, &id); err == nil {
-		w.Id = &id
+		s.Id = &id
 		return nil
 	}
 
 	var station mStation
 	if err := json.Unmarshal(data, &station); err == nil && station.Type == objectTypeStation {
-		w.Station = new(Station)
-		w.Station.fromM(&station)
+		s.Station = new(Station)
+		s.Station.fromM(&station)
 		return nil
 	}
 
 	var stop mStop
 	if err := json.Unmarshal(data, &stop); err == nil && stop.Type == objectTypeStop {
-		w.Stop = new(Stop)
-		w.Stop.fromM(&stop)
+		s.Stop = new(Stop)
+		s.Stop.fromM(&stop)
 		return nil
 	}
 
 	return errors.New("could not unmarshall to any of type string, station or stop")
 }
 
-func (w *StopStation) MarshalJSON() ([]byte, error) {
-	if w.Id != nil {
-		return json.Marshal(w.Id)
+func (s *StopStation) MarshalJSON() ([]byte, error) {
+	if s.Id != nil {
+		return json.Marshal(s.Id)
 	}
-	if w.Station != nil {
-		return json.Marshal(w.Station)
+	if s.Station != nil {
+		return json.Marshal(s.Station)
 	}
-	if w.Stop != nil {
-		return json.Marshal(w.Stop)
+	if s.Stop != nil {
+		return json.Marshal(s.Stop)
 	}
 	return []byte("null"), nil
 }

@@ -29,8 +29,8 @@ type Trip struct {
 
 	Stopovers []*Stopover `json:"stopovers,omitempty"`
 
-	Mode    Mode `json:"mode,omitempty"`
-	SubMode Mode `json:"subMode,omitempty"`
+	Mode    Mode   `json:"mode,omitempty"`
+	SubMode string `json:"subMode,omitempty"`
 
 	Public *bool `json:"public,omitempty"`
 
@@ -46,8 +46,9 @@ type Trip struct {
 }
 
 type Price struct {
-	Amount   float64 `json:"amount"`
-	Currency string  `json:"currency"`
+	Amount   float64     `json:"amount"`
+	Currency string      `json:"currency"`
+	Meta     interface{} `json:"meta,omitempty"` // any additional data
 }
 
 type mJourney struct {
