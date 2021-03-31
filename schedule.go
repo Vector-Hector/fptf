@@ -1,6 +1,8 @@
 package fptf
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 // Note: There are many ways to format schedules of public transport
 // routes. This one tries to balance the amount of data and

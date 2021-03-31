@@ -1,7 +1,6 @@
 package fptf
 
 import (
-	"encoding/json"
 	"strconv"
 	"time"
 )
@@ -17,10 +16,7 @@ func (t TimeUnix) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON is used to convert the timestamp from JSON
 func (t *TimeUnix) UnmarshalJSON(s []byte) error {
-	var r string
-	err := json.Unmarshal(s, &r)
-	if err != nil {return err}
-
+	r := string(s)
 	q, err := strconv.ParseInt(r, 10, 64)
 	if err != nil {
 		return err
