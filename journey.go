@@ -51,6 +51,41 @@ type Price struct {
 	Meta     interface{} `json:"meta,omitempty"` // any additional data
 }
 
+// The mode of a trip can be defined in many places.
+// This method finds the mode of a given trip.
+func (trip *Trip) GetMode() *Mode {
+	if trip.Mode != "" {
+		return &trip.Mode
+	}
+	if trip.Line != nil && trip.Line.Mode != "" {
+		return &trip.Line.Mode
+	}
+	if trip.Schedule != nil {
+		if trip.Schedule.Mode != "" {
+			return &trip.Schedule.Mode
+		}
+		if trip.Schedule.Route != nil && trip.Schedule.Route.Mode != "" {
+			return &trip.Schedule.Route.Mode
+		}
+		if trip.Schedule.Route != nil && trip.Schedule.Route.Line != nil && trip.Schedule.Route.Line.Mode != "" {
+			return &trip.Schedule.Route.Line.Mode
+		}
+	}
+	return nil
+}
+
+// The line of a trip can be defined in multiple places
+// This method finds it
+func (trip *Trip) GetLine() *Line {
+	if trip.Line != nil {
+		return trip.Line
+	}
+	if trip.Schedule != nil && trip.Schedule.Route != nil && trip.Schedule.Route.Line != nil {
+		return trip.Schedule.Route.Line
+	}
+	return nil
+}
+
 type mJourney struct {
 	typed
 	Id    string      `json:"id"`

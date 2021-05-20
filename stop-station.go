@@ -13,13 +13,13 @@ type StopStation struct {
 
 func (s *Station) ToStopStation() *StopStation {
 	return &StopStation{
-		Station:   s,
+		Station: s,
 	}
 }
 
 func (s *Stop) ToStopStation() *StopStation {
 	return &StopStation{
-		Stop:      s,
+		Stop: s,
 	}
 }
 
@@ -31,6 +31,105 @@ func (s *StopStation) GetLocation() *Location {
 		return s.Station.Location
 	}
 	return nil
+}
+
+func (s *StopStation) SetLocation(loc *Location) {
+	if s.Stop != nil {
+		s.Stop.Location = loc
+		return
+	}
+	if s.Station != nil {
+		s.Station.Location = loc
+		return
+	}
+	if s.Id != nil {
+		s.Station = &Station{
+			Id: *s.Id,
+			Location: loc,
+		}
+		s.Id = nil
+	}
+}
+
+func (s *StopStation) GetName() string {
+	if s.Stop != nil {
+		if s.Stop.Name != "" {
+			return s.Stop.Name
+		}
+
+		if s.Stop.Station != nil {
+			if stationName := s.Stop.Station.ToStopStation().GetName(); stationName != "" {
+				return stationName
+			}
+		}
+
+		if s.Stop.Location != nil && s.Stop.Location.Name != "" {
+			return s.Stop.Location.Name
+		}
+	}
+	if s.Station != nil {
+		if s.Station.Name != "" {
+			return s.Station.Name
+		}
+
+		if s.Station.Location != nil && s.Station.Location.Name != "" {
+			return s.Station.Location.Name
+		}
+	}
+	if s.Id != nil {
+		return *s.Id
+	}
+	return ""
+}
+
+func (s *StopStation) SetName(name string) {
+	if s.Stop != nil {
+		s.Stop.Name = name
+		return
+	}
+	if s.Station != nil {
+		s.Station.Name = name
+		return
+	}
+	if s.Id != nil {
+		s.Station = &Station{
+			Id:   *s.Id,
+			Name: name,
+		}
+		s.Id = nil
+	}
+}
+
+func (s *StopStation) GetId() string {
+	if s.Stop != nil {
+		return s.Stop.Id
+	}
+
+	if s.Station != nil {
+		return s.Station.Id
+	}
+
+	if s.Id != nil {
+		return *s.Id
+	}
+	return ""
+}
+
+func (s *StopStation) SetId(id string) {
+	if s.Stop != nil {
+		s.Stop.Id = id
+		return
+	}
+
+	if s.Station != nil {
+		s.Station.Id = id
+		return
+	}
+
+	if s.Id != nil {
+		s.Id = &id
+		return
+	}
 }
 
 // as it is optional to give either stop|station id or Stop or Station object,
