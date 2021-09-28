@@ -12,7 +12,7 @@ type Station struct {
 	Id       string
 	Name     string
 	Location *Location
-	Regions  *[]Region
+	Regions  []*Region
 	Meta     interface{} // any additional data
 
 	Partial bool // only show the id in the json response?
@@ -24,7 +24,7 @@ type mStation struct {
 	Id       string      `json:"id"`
 	Name     string      `json:"name"`
 	Location *Location   `json:"location,omitempty"`
-	Regions  *[]Region   `json:"regions,omitempty"`
+	Regions  []*Region   `json:"regions,omitempty"`
 	Meta     interface{} `json:"meta,omitempty"`
 }
 

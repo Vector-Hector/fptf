@@ -12,7 +12,7 @@ type Route struct {
 	Line    *Line
 	Mode    Mode
 	SubMode string
-	Stops   *[]Stop
+	Stops   []*Stop
 	Meta    interface{} // any additional data
 }
 
@@ -23,7 +23,7 @@ type mRoute struct {
 	Line    *Line       `json:"line"`
 	Mode    Mode        `json:"mode,omitempty"`
 	SubMode string      `json:"subMode,omitempty"`
-	Stops   *[]Stop     `json:"stops"`
+	Stops   []*Stop     `json:"stops"`
 	Meta    interface{} `json:"meta,omitempty"`
 }
 

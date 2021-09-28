@@ -7,7 +7,7 @@ import "encoding/json"
 // algorithm.
 type Journey struct {
 	Id    string
-	Trips *[]Trip
+	Trips []*Trip
 	Price *Price
 	Meta  interface{} // any additional data
 }
@@ -89,7 +89,7 @@ func (trip *Trip) GetLine() *Line {
 type mJourney struct {
 	typed
 	Id    string      `json:"id"`
-	Trips *[]Trip     `json:"legs"`
+	Trips []*Trip     `json:"legs"`
 	Price *Price      `json:"price"`
 	Meta  interface{} `json:"meta,omitempty"`
 }
