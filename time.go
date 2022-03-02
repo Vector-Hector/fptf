@@ -5,8 +5,7 @@ import (
 	"time"
 )
 
-// Is essentially just a time.Time object, but it is (un)marshalled as
-// unix integers
+// TimeUnix a time.Time object, that is (un)marshalled as unix integers
 type TimeUnix time.Time
 
 // MarshalJSON is used to convert the timestamp to JSON

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 )
 
-// Note: There are many ways to format schedules of public transport
+// Schedule There are many ways to format schedules of public transport
 // routes. This one tries to balance the amount of data and
 // consumability. It is specifically geared towards urban public
 // transport, with frequent trains and homogenous travels.
@@ -62,6 +62,7 @@ func (w *Schedule) fromM(m *mSchedule) {
 
 // as it is optional to give either schedule id or Schedule object,
 // we have to unmarshal|marshal it ourselves.
+
 func (w *Schedule) UnmarshalJSON(data []byte) error {
 	var id string
 	if err := json.Unmarshal(data, &id); err == nil {

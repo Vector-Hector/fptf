@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 )
 
-// A Station is a larger building or area that can be identified by a name.
+// Station is a larger building or area that can be identified by a name.
 // It is usually represented by a single node on a public transport map.
 // Whereas a Stop usually specifies a location, a Station often is a
 // broader area that may span across multiple levels or buildings.
@@ -49,6 +49,7 @@ func (s *Station) fromM(m *mStation) {
 
 // as it is optional to give either station id or Station object,
 // we have to unmarshal|marshal it ourselves.
+
 func (s *Station) UnmarshalJSON(data []byte) error {
 	var id string
 	if err := json.Unmarshal(data, &id); err == nil {

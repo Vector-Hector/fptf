@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 )
 
-// A Stop is a single small point or structure at which vehicles stop.
+// Stop is a single small point or structure at which vehicles stop.
 // A Stop always belongs to a Station. It may for example be a sign,
 // a basic shelter or a railway platform.
 //
@@ -51,6 +51,7 @@ func (s *Stop) fromM(m *mStop) {
 
 // as it is optional to give either line id or Line object,
 // we have to unmarshal|marshal it ourselves.
+
 func (s *Stop) UnmarshalJSON(data []byte) error {
 	var id string
 	if err := json.Unmarshal(data, &id); err == nil {
