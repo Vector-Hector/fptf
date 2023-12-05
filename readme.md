@@ -1,8 +1,7 @@
 # friendly-public-transport-format
 
-This is a implementation
-of [fptf](https://github.com/public-transport/friendly-public-transport-format/blob/1.2.1/spec/readme.md)
-in golang.
+Go bindings
+of [fptf](https://github.com/public-transport/friendly-public-transport-format/blob/1.2.1/spec/readme.md).
 
 This package is just a collection of types and (un)marshall functions, really.
 But since fptf requires some optional stuff (e.g. stops can be objects or strings), 
