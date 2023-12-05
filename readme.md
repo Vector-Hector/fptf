@@ -1,4 +1,4 @@
-# friendly-public-transport-format
+# fptf
 
 Go bindings
 of [fptf](https://github.com/public-transport/friendly-public-transport-format/blob/1.2.1/spec/readme.md).
