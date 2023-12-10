@@ -17,7 +17,7 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/Vector-Hector/friendly-public-transport-format"
+	"github.com/Vector-Hector/fptf"
 )
 
 func main() {
