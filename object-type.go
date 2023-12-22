@@ -16,19 +16,19 @@ const (
 	objectTypeJourney  objectType = "journey"
 )
 
-type typed struct {
-	Type objectType `json:"type"`
+type Typed struct {
+	Type objectType `json:"type,omitempty" bson:"type,omitempty"`
 }
 
 var (
-	typedLocation = typed{Type: objectTypeLocation}
-	typedStation  = typed{Type: objectTypeStation}
-	typedStop     = typed{Type: objectTypeStop}
-	typedRegion   = typed{Type: objectTypeRegion}
-	typedLine     = typed{Type: objectTypeLine}
-	typedRoute    = typed{Type: objectTypeRoute}
-	typedSchedule = typed{Type: objectTypeSchedule}
-	typedOperator = typed{Type: objectTypeOperator}
-	typedStopover = typed{Type: objectTypeStopover}
-	typedJourney  = typed{Type: objectTypeJourney}
+	typedLocation = Typed{Type: objectTypeLocation}
+	typedStation  = Typed{Type: objectTypeStation}
+	typedStop     = Typed{Type: objectTypeStop}
+	typedRegion   = Typed{Type: objectTypeRegion}
+	typedLine     = Typed{Type: objectTypeLine}
+	typedRoute    = Typed{Type: objectTypeRoute}
+	typedSchedule = Typed{Type: objectTypeSchedule}
+	typedOperator = Typed{Type: objectTypeOperator}
+	typedStopover = Typed{Type: objectTypeStopover}
+	typedJourney  = Typed{Type: objectTypeJourney}
 )

@@ -2,6 +2,8 @@ package fptf
 
 import (
 	"encoding/json"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/bsontype"
 )
 
 // Station is a larger building or area that can be identified by a name.
@@ -20,22 +22,22 @@ type Station struct {
 
 // used by marshal
 type mStation struct {
-	typed
-	Id       string      `json:"id"`
-	Name     string      `json:"name"`
-	Location *Location   `json:"location,omitempty"`
-	Regions  []*Region   `json:"regions,omitempty"`
-	Meta     interface{} `json:"meta,omitempty"`
+	Typed    `bson:"inline"`
+	Id       string      `json:"id,omitempty" bson:"id,omitempty"`
+	Name     string      `json:"name,omitempty" bson:"name,omitempty"`
+	Location *Location   `json:"location,omitempty" bson:"location,omitempty"`
+	Regions  []*Region   `json:"regions,omitempty" bson:"regions,omitempty"`
+	Meta     interface{} `json:"meta,omitempty" bson:"meta,omitempty"`
 }
 
 func (s *Station) toM() *mStation {
 	return &mStation{
-		typed:    typedStation,
+		Typed:    typedStation,
 		Id:       s.Id,
 		Name:     s.Name,
 		Location: s.Location,
 		Regions:  s.Regions,
-		Meta: s.Meta,
+		Meta:     s.Meta,
 	}
 }
 
@@ -72,4 +74,33 @@ func (s *Station) MarshalJSON() ([]byte, error) {
 		return json.Marshal(s.Id)
 	}
 	return json.Marshal(s.toM())
+}
+
+func (s *Station) UnmarshalBSONValue(typ bsontype.Type, data []byte) error {
+	if typ == bson.TypeString {
+		var id string
+		err := bson.UnmarshalValue(bson.TypeString, data, &id)
+		if err != nil {
+			return err
+		}
+		s.Id = id
+		s.Partial = true
+		return nil
+	}
+
+	s.Partial = false
+	var m mStation
+	err := bson.Unmarshal(data, &m)
+	if err != nil {
+		return err
+	}
+	s.fromM(&m)
+	return nil
+}
+
+func (s Station) MarshalBSONValue() (bsontype.Type, []byte, error) {
+	if s.Partial {
+		return bson.MarshalValue(s.Id)
+	}
+	return bson.MarshalValue(s.toM())
 }

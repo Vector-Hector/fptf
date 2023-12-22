@@ -1,6 +1,10 @@
 package fptf
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/bsontype"
+)
 
 type Location struct {
 	Name      string
@@ -12,18 +16,18 @@ type Location struct {
 }
 
 type mLocation struct {
-	typed
-	Name      string      `json:"name,omitempty"`
-	Address   string      `json:"address,omitempty"`
-	Longitude float64     `json:"longitude,omitempty"`
-	Latitude  float64     `json:"latitude,omitempty"`
-	Altitude  float64     `json:"altitude,omitempty"`
-	Meta      interface{} `json:"meta,omitempty"`
+	Typed     `bson:"inline"`
+	Name      string      `json:"name,omitempty" bson:"name,omitempty"`
+	Address   string      `json:"address,omitempty" bson:"address,omitempty"`
+	Longitude float64     `json:"longitude,omitempty" bson:"longitude,omitempty"`
+	Latitude  float64     `json:"latitude,omitempty" bson:"latitude,omitempty"`
+	Altitude  float64     `json:"altitude,omitempty" bson:"altitude,omitempty"`
+	Meta      interface{} `json:"meta,omitempty" bson:"meta,omitempty"`
 }
 
 func (w *Location) toM() *mLocation {
 	return &mLocation{
-		typed:     typedLocation,
+		Typed:     typedLocation,
 		Name:      w.Name,
 		Address:   w.Address,
 		Longitude: w.Longitude,
@@ -54,4 +58,18 @@ func (w *Location) UnmarshalJSON(data []byte) error {
 
 func (w *Location) MarshalJSON() ([]byte, error) {
 	return json.Marshal(w.toM())
+}
+
+func (w *Location) UnmarshalBSONValue(typ bsontype.Type, data []byte) error {
+	var m mLocation
+	err := bson.UnmarshalValue(typ, data, &m)
+	if err != nil {
+		return err
+	}
+	w.fromM(&m)
+	return nil
+}
+
+func (w Location) MarshalBSONValue() (bsontype.Type, []byte, error) {
+	return bson.MarshalValue(w.toM())
 }

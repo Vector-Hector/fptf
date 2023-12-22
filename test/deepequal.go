@@ -1,7 +1,9 @@
 package test
 
 import (
+	"fmt"
 	"reflect"
+	"time"
 )
 
 func deepEqual(v1 interface{}, v2 interface{}) bool {
@@ -12,9 +14,14 @@ func deepEqual(v1 interface{}, v2 interface{}) bool {
 // as we only look at json unmarshalled values, we can ignore the recursive type problem
 func deepValueEqual(v1 reflect.Value, v2 reflect.Value) bool {
 	if isZero(v1) {
-		return isZero(v2)
+		bothZero := isZero(v2)
+		if !bothZero {
+			fmt.Println("Deep equal failed at value comparing values\n", v1, "\n", v2, "(v1 is zero, v2 is not)")
+		}
+		return bothZero
 	}
 	if isZero(v2) {
+		fmt.Println("Deep equal failed at value comparing values\n", v1, "\n", v2, "(v2 is zero, v1 is not)")
 		return false
 	}
 
@@ -29,9 +36,11 @@ func deepValueEqual(v1 reflect.Value, v2 reflect.Value) bool {
 		return true
 	case reflect.Slice:
 		if v1.IsNil() != v2.IsNil() {
+			fmt.Println("Deep equal failed at slice comparing values\n", v1, "\n", v2, "(one is nil, the other is not)")
 			return false
 		}
 		if v1.Len() != v2.Len() {
+			fmt.Println("Deep equal failed at slice comparing values\n", v1, "\n", v2, "(lengths differ)")
 			return false
 		}
 		if v1.Pointer() == v2.Pointer() {
@@ -46,7 +55,11 @@ func deepValueEqual(v1 reflect.Value, v2 reflect.Value) bool {
 		return true
 	case reflect.Interface:
 		if v1.IsNil() || v2.IsNil() {
-			return v1.IsNil() == v2.IsNil()
+			bothNil := v1.IsNil() == v2.IsNil()
+			if !bothNil {
+				fmt.Println("Deep equal failed at interface comparing values\n", v1, "\n", v2, "(one is nil, the other is not)")
+			}
+			return bothNil
 		}
 		return deepValueEqual(v1.Elem(), v2.Elem())
 	case reflect.Ptr:
@@ -78,8 +91,39 @@ func deepValueEqual(v1 reflect.Value, v2 reflect.Value) bool {
 		}
 		return true
 	default:
-		return v1.Interface() == v2.Interface()
+		t1, v1IsTime := getTime(v1)
+		t2, v2IsTime := getTime(v2)
+
+		if v1IsTime && v2IsTime {
+			eq := t1.Equal(t2)
+			if !eq {
+				fmt.Println("Deep equal failed at time comparing values\n", v1, "\n", v2)
+			}
+			return eq
+		}
+
+		interfacesEqual := v1.Interface() == v2.Interface()
+		if !interfacesEqual {
+			fmt.Println("Deep equal failed at default comparing values\n", v1, "\n", v2, "(interfaces not equal)")
+		}
+		return interfacesEqual
 	}
+}
+
+func getTime(val reflect.Value) (time.Time, bool) {
+	if val.Type().String() == "time.Time" {
+		return val.Interface().(time.Time), true
+	}
+
+	if val.Type().String() == "string" {
+		t, err := time.Parse(time.RFC3339, val.Interface().(string))
+		if err != nil {
+			return time.Time{}, false
+		}
+		return t, true
+	}
+
+	return time.Time{}, false
 }
 
 func isZero(val reflect.Value) bool {

@@ -3,6 +3,9 @@ package fptf
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/bsontype"
 )
 
 type StopStation struct {
@@ -44,7 +47,7 @@ func (s *StopStation) SetLocation(loc *Location) {
 	}
 	if s.Id != nil {
 		s.Station = &Station{
-			Id: *s.Id,
+			Id:       *s.Id,
 			Location: loc,
 		}
 		s.Id = nil
@@ -169,4 +172,53 @@ func (s *StopStation) MarshalJSON() ([]byte, error) {
 		return json.Marshal(s.Stop)
 	}
 	return []byte("null"), nil
+}
+
+func (s *StopStation) UnmarshalBSONValue(typ bsontype.Type, data []byte) error {
+	if typ == bson.TypeString {
+		var id string
+		err := bson.UnmarshalValue(bson.TypeString, data, &id)
+		if err != nil {
+			return err
+		}
+		s.Id = &id
+		return nil
+	}
+
+	var station mStation
+	stationErr := bson.Unmarshal(data, &station)
+	if stationErr == nil && station.Type == objectTypeStation {
+		s.Station = new(Station)
+		s.Station.fromM(&station)
+		return nil
+	}
+
+	var stop mStop
+	stopErr := bson.Unmarshal(data, &stop)
+	if stopErr == nil && stop.Type == objectTypeStop {
+		s.Stop = new(Stop)
+		s.Stop.fromM(&stop)
+		return nil
+	}
+
+	var m bson.M
+	err := bson.Unmarshal(data, &m)
+	if err != nil {
+		return err
+	}
+
+	return fmt.Errorf("could not unmarshall to any of type string, station or stop. stationErr: %v, stopErr: %v, data type: %v, fptf type: %s, object as map: %v", stationErr, stopErr, typ, string(stop.Type), m)
+}
+
+func (s StopStation) MarshalBSONValue() (bsontype.Type, []byte, error) {
+	if s.Id != nil {
+		return bson.MarshalValue(s.Id)
+	}
+	if s.Station != nil {
+		return s.Station.MarshalBSONValue()
+	}
+	if s.Stop != nil {
+		return s.Stop.MarshalBSONValue()
+	}
+	return bson.MarshalValue(nil)
 }

@@ -1,6 +1,10 @@
 package fptf
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/bsontype"
+)
 
 // A Route represents a single set of stations, of a single Line.
 //
@@ -18,18 +22,18 @@ type Route struct {
 
 // used by marshal
 type mRoute struct {
-	typed
-	Id      string      `json:"id"`
-	Line    *Line       `json:"line"`
-	Mode    Mode        `json:"mode,omitempty"`
-	SubMode string      `json:"subMode,omitempty"`
-	Stops   []*Stop     `json:"stops"`
-	Meta    interface{} `json:"meta,omitempty"`
+	Typed   `bson:"inline"`
+	Id      string      `json:"id,omitempty" bson:"id,omitempty"`
+	Line    *Line       `json:"line,omitempty" bson:"line,omitempty"`
+	Mode    Mode        `json:"mode,omitempty" bson:"mode,omitempty"`
+	SubMode string      `json:"subMode,omitempty" bson:"subMode,omitempty"`
+	Stops   []*Stop     `json:"stops,omitempty" bson:"stops,omitempty"`
+	Meta    interface{} `json:"meta,omitempty" bson:"meta,omitempty"`
 }
 
 func (w *Route) toM() *mRoute {
 	return &mRoute{
-		typed:   typedRoute,
+		Typed:   typedRoute,
 		Id:      w.Id,
 		Line:    w.Line,
 		Mode:    w.Mode,
@@ -60,4 +64,19 @@ func (w *Route) UnmarshalJSON(data []byte) error {
 
 func (w *Route) MarshalJSON() ([]byte, error) {
 	return json.Marshal(w.toM())
+}
+
+func (w *Route) UnmarshalBSONValue(typ bsontype.Type, data []byte) error {
+	var m mRoute
+	err := bson.UnmarshalValue(typ, data, &m)
+	if err != nil {
+		return err
+	}
+
+	w.fromM(&m)
+	return nil
+}
+
+func (w Route) MarshalBSONValue() (bsontype.Type, []byte, error) {
+	return bson.MarshalValue(w.toM())
 }

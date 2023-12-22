@@ -2,6 +2,8 @@ package fptf
 
 import (
 	"encoding/json"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/bsontype"
 	"time"
 )
 
@@ -95,41 +97,43 @@ func (j *Journey) GetArrivalDelay() *int {
 
 // Trip is a formalized, inferred version of a journey leg
 type Trip struct {
-	Origin      *StopStation `json:"origin,omitempty"`
-	Destination *StopStation `json:"destination,omitempty"`
+	Origin      *StopStation `json:"origin,omitempty" bson:"origin,omitempty"`
+	Destination *StopStation `json:"destination,omitempty" bson:"destination,omitempty"`
 
-	Departure         TimeNullable `json:"departure,omitempty"`
-	DepartureDelay    *int         `json:"departureDelay,omitempty"`
-	DeparturePlatform string       `json:"departurePlatform,omitempty"`
+	Departure         TimeNullable `json:"departure,omitempty" bson:"departure,omitempty"`
+	DepartureDelay    *int         `json:"departureDelay,omitempty" bson:"departureDelay,omitempty"`
+	DeparturePlatform string       `json:"departurePlatform,omitempty" bson:"departurePlatform,omitempty"`
 
-	Arrival         TimeNullable `json:"arrival,omitempty"`
-	ArrivalDelay    *int         `json:"arrivalDelay,omitempty"`
-	ArrivalPlatform string       `json:"arrivalPlatform,omitempty"`
+	Arrival         TimeNullable `json:"arrival,omitempty" bson:"arrival,omitempty"`
+	ArrivalDelay    *int         `json:"arrivalDelay,omitempty" bson:"arrivalDelay,omitempty"`
+	ArrivalPlatform string       `json:"arrivalPlatform,omitempty" bson:"arrivalPlatform,omitempty"`
 
-	Schedule *Schedule `json:"schedule,omitempty"`
+	Schedule *Schedule `json:"schedule,omitempty" bson:"schedule,omitempty"`
 
-	Stopovers []*Stopover `json:"stopovers,omitempty"`
+	Stopovers []*Stopover `json:"stopovers,omitempty" bson:"stopovers,omitempty"`
 
-	Mode    Mode   `json:"mode,omitempty"`
-	SubMode string `json:"subMode,omitempty"`
+	Mode    Mode   `json:"mode,omitempty" bson:"mode,omitempty"`
+	SubMode string `json:"subMode,omitempty" bson:"subMode,omitempty"`
 
-	Public *bool `json:"public,omitempty"`
+	Public *bool `json:"public,omitempty" bson:"public,omitempty"`
 
-	Operator *Operator `json:"operator,omitempty"`
+	Operator *Operator `json:"operator,omitempty" bson:"operator,omitempty"`
 
-	Price *Price `json:"price,omitempty"`
+	Price *Price `json:"price,omitempty" bson:"price,omitempty"`
 
 	// Some additional arguments, inspired by https://github.com/public-transport/hafas-client
-	Line      *Line  `json:"line,omitempty"`      // The line on which this trip is going
-	Direction string `json:"direction,omitempty"` // The direction string on the train
+	Line      *Line  `json:"line,omitempty" bson:"line,omitempty"`           // The line on which this trip is going
+	Direction string `json:"direction,omitempty" bson:"direction,omitempty"` // The direction string on the train
 
-	Meta interface{} `json:"meta,omitempty"` // any additional data
+	Polyline string `json:"polyline,omitempty" bson:"polyline,omitempty"` // The polyline of the trip
+
+	Meta interface{} `json:"meta,omitempty" bson:"meta,omitempty"` // any additional data
 }
 
 type Price struct {
-	Amount   float64     `json:"amount,omitempty"`
-	Currency string      `json:"currency,omitempty"`
-	Meta     interface{} `json:"meta,omitempty"` // any additional data
+	Amount   float64     `json:"amount,omitempty" bson:"amount,omitempty"`
+	Currency string      `json:"currency,omitempty" bson:"currency,omitempty"`
+	Meta     interface{} `json:"meta,omitempty" bson:"meta,omitempty"` // any additional data
 }
 
 // GetMode The mode of a trip can be defined in many places.
@@ -168,9 +172,9 @@ func (trip *Trip) GetLine() *Line {
 }
 
 func (trip *Trip) SubTrip(startInclusive int, endExclusive int) *Trip {
-	stopovers := trip.Stopovers[startInclusive : endExclusive]
+	stopovers := trip.Stopovers[startInclusive:endExclusive]
 	origin := stopovers[0]
-	dest := stopovers[len(stopovers) - 1]
+	dest := stopovers[len(stopovers)-1]
 
 	return &Trip{
 		Origin:            origin.StopStation,
@@ -190,21 +194,22 @@ func (trip *Trip) SubTrip(startInclusive int, endExclusive int) *Trip {
 		Price:             nil,
 		Line:              trip.Line,
 		Direction:         trip.Direction,
+		Polyline:          trip.Polyline,
 		Meta:              trip.Meta,
 	}
 }
 
 type mJourney struct {
-	typed
-	Id    string      `json:"id"`
-	Trips []*Trip     `json:"legs"`
-	Price *Price      `json:"price"`
-	Meta  interface{} `json:"meta,omitempty"`
+	Typed `bson:"inline"`
+	Id    string      `json:"id,omitempty" bson:"id,omitempty"`
+	Trips []*Trip     `json:"legs,omitempty" bson:"legs,omitempty"`
+	Price *Price      `json:"price,omitempty" bson:"price,omitempty"`
+	Meta  interface{} `json:"meta,omitempty" bson:"meta,omitempty"`
 }
 
 func (j *Journey) toM() *mJourney {
 	return &mJourney{
-		typed: typedJourney,
+		Typed: typedJourney,
 		Id:    j.Id,
 		Trips: j.Trips,
 		Price: j.Price,
@@ -234,4 +239,32 @@ func (j *Journey) UnmarshalJSON(data []byte) error {
 
 func (j *Journey) MarshalJSON() ([]byte, error) {
 	return json.Marshal(j.toM())
+}
+
+func (j *Journey) UnmarshalBSON(data []byte) error {
+	var m mJourney
+	err := bson.Unmarshal(data, &m)
+	if err != nil {
+		return err
+	}
+	j.fromM(&m)
+	return nil
+}
+
+func (j *Journey) UnmarshalBSONValue(typ bsontype.Type, data []byte) error {
+	var m mJourney
+	err := bson.UnmarshalValue(typ, data, &m)
+	if err != nil {
+		return err
+	}
+	j.fromM(&m)
+	return nil
+}
+
+func (j Journey) MarshalBSON() ([]byte, error) {
+	return bson.Marshal(j.toM())
+}
+
+func (j Journey) MarshalBSONValue() (bsontype.Type, []byte, error) {
+	return bson.MarshalValue(j.toM())
 }
