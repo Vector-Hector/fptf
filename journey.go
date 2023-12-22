@@ -125,6 +125,8 @@ type Trip struct {
 	Line      *Line  `json:"line,omitempty" bson:"line,omitempty"`           // The line on which this trip is going
 	Direction string `json:"direction,omitempty" bson:"direction,omitempty"` // The direction string on the train
 
+	Polyline string `json:"polyline,omitempty" bson:"polyline,omitempty"` // The polyline of the trip
+
 	Meta interface{} `json:"meta,omitempty" bson:"meta,omitempty"` // any additional data
 }
 
@@ -192,6 +194,7 @@ func (trip *Trip) SubTrip(startInclusive int, endExclusive int) *Trip {
 		Price:             nil,
 		Line:              trip.Line,
 		Direction:         trip.Direction,
+		Polyline:          trip.Polyline,
 		Meta:              trip.Meta,
 	}
 }
@@ -199,7 +202,7 @@ func (trip *Trip) SubTrip(startInclusive int, endExclusive int) *Trip {
 type mJourney struct {
 	Typed `bson:"inline"`
 	Id    string      `json:"id,omitempty" bson:"id,omitempty"`
-	Trips []*Trip     `json:"legs,omitempty" bson:"trips,omitempty"`
+	Trips []*Trip     `json:"legs,omitempty" bson:"legs,omitempty"`
 	Price *Price      `json:"price,omitempty" bson:"price,omitempty"`
 	Meta  interface{} `json:"meta,omitempty" bson:"meta,omitempty"`
 }
