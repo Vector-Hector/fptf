@@ -2,9 +2,10 @@ package test
 
 import (
 	"encoding/json"
-	"fmt"
-	"github.com/Vector-Hector/friendly-public-transport-format"
+	"github.com/Vector-Hector/fptf"
+	"go.mongodb.org/mongo-driver/bson"
 	"io/ioutil"
+	"os"
 	"testing"
 )
 
@@ -32,20 +33,24 @@ func TestParseValidSimpleJourney(t *testing.T) {
 
 func TestWriteValidJourney(t *testing.T) {
 	testRewriteJourney(t, "valid-journey.json")
+	testBsonRewriteJourney(t, "valid-journey.json")
 }
 
 func TestWriteSimpleValidJourney(t *testing.T) {
 	testRewriteJourney(t, "valid-simple-journey.json")
+	testBsonRewriteJourney(t, "valid-simple-journey.json")
 }
 
 func testRewriteJourney(t *testing.T, file string) {
-	rawDat, err := ioutil.ReadFile(file)
+	rawDat, err := os.ReadFile(file)
 	if err != nil {
 		panic(err)
 	}
 
 	journey, err := getJourneyFromBytes(rawDat)
-	if err != nil {t.Error(err)}
+	if err != nil {
+		t.Error(err)
+	}
 
 	remarshalledDat, err := json.Marshal(journey)
 	if err != nil {
@@ -54,17 +59,64 @@ func testRewriteJourney(t *testing.T, file string) {
 
 	var journeyRawObj interface{}
 	err = json.Unmarshal(rawDat, &journeyRawObj)
-	if err != nil {t.Error(err)}
+	if err != nil {
+		t.Error(err)
+	}
 
 	var remarshalledRawObj interface{}
 	err = json.Unmarshal(remarshalledDat, &remarshalledRawObj)
-	if err != nil {t.Error(err)}
-
-		fmt.Println("Remarshalled", file, ":")
-		fmt.Println(string(remarshalledDat))
-	if !deepEqual(journeyRawObj, remarshalledRawObj) {
-		t.Error("Marshalling the parsed data did not give the original data")
+	if err != nil {
+		t.Error(err)
 	}
+
+	if !deepEqual(journeyRawObj, remarshalledRawObj) {
+		t.Error("JSON: marshalling the parsed data did not give the original data")
+	}
+}
+
+func testBsonRewriteJourney(t *testing.T, file string) {
+	rawDat, err := os.ReadFile(file)
+	if err != nil {
+		panic(err)
+	}
+
+	journey, err := getJourneyFromBytes(rawDat)
+	if err != nil {
+		t.Error(err)
+	}
+
+	var journeyRawObj interface{}
+	err = json.Unmarshal(rawDat, &journeyRawObj)
+	if err != nil {
+		t.Error(err)
+	}
+
+	remarshalledDat, err := bson.Marshal(journey)
+	if err != nil {
+		t.Error(err)
+	}
+
+	var remarshalledJourney fptf.Journey
+	err = bson.Unmarshal(remarshalledDat, &remarshalledJourney)
+	if err != nil {
+		t.Error(err)
+	}
+
+	remarshalledJsonData, err := json.Marshal(&remarshalledJourney)
+	if err != nil {
+		t.Error(err)
+	}
+
+	var remarshalledRawObj interface{}
+	err = json.Unmarshal(remarshalledJsonData, &remarshalledRawObj)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !deepEqual(journeyRawObj, remarshalledRawObj) {
+		t.Error("BSON: marshalling the parsed data did not give the original data")
+	}
+
 }
 
 func getJourneyFromBytes(dat []byte) (*fptf.Journey, error) {

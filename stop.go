@@ -2,6 +2,8 @@ package fptf
 
 import (
 	"encoding/json"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/bsontype"
 )
 
 // Stop is a single small point or structure at which vehicles stop.
@@ -22,17 +24,17 @@ type Stop struct {
 
 // used by marshal
 type mStop struct {
-	typed
-	Id       string      `json:"id"`
-	Name     string      `json:"name"`
-	Station  *Station    `json:"station"`
-	Location *Location   `json:"location,omitempty"`
-	Meta     interface{} `json:"meta,omitempty"`
+	Typed    `bson:"inline"`
+	Id       string      `json:"id,omitempty" bson:"id,omitempty"`
+	Name     string      `json:"name,omitempty" bson:"name,omitempty"`
+	Station  *Station    `json:"station,omitempty" bson:"station,omitempty"`
+	Location *Location   `json:"location,omitempty" bson:"location,omitempty"`
+	Meta     interface{} `json:"meta,omitempty" bson:"meta,omitempty"`
 }
 
 func (s *Stop) toM() *mStop {
 	return &mStop{
-		typed:    typedStop,
+		Typed:    typedStop,
 		Id:       s.Id,
 		Name:     s.Name,
 		Station:  s.Station,
@@ -74,4 +76,32 @@ func (s *Stop) MarshalJSON() ([]byte, error) {
 		return json.Marshal(s.Id)
 	}
 	return json.Marshal(s.toM())
+}
+
+func (s *Stop) UnmarshalBSONValue(typ bsontype.Type, data []byte) error {
+	if typ == bson.TypeString {
+		var id string
+		err := bson.UnmarshalValue(bson.TypeString, data, &id)
+		if err != nil {
+			return err
+		}
+		s.Id = id
+		s.Partial = true
+		return nil
+	}
+	s.Partial = false
+	var m mStop
+	err := bson.Unmarshal(data, &m)
+	if err != nil {
+		return err
+	}
+	s.fromM(&m)
+	return nil
+}
+
+func (s *Stop) MarshalBSONValue() (bsontype.Type, []byte, error) {
+	if s.Partial {
+		return bson.MarshalValue(s.Id)
+	}
+	return bson.MarshalValue(s.toM())
 }

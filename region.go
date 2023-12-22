@@ -1,6 +1,10 @@
 package fptf
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/bsontype"
+)
 
 // A Region is a group of Stations, for example a metropolitan area
 // or a geographical or cultural region.
@@ -22,16 +26,16 @@ type Region struct {
 }
 
 type mRegion struct {
-	typed
-	Id       string      `json:"id"`
-	Name     string      `json:"name"`
-	Stations []*Station  `json:"stations"`
-	Meta     interface{} `json:"meta,omitempty"`
+	Typed    `bson:"inline"`
+	Id       string      `json:"id,omitempty" bson:"id,omitempty"`
+	Name     string      `json:"name,omitempty" bson:"name,omitempty"`
+	Stations []*Station  `json:"stations,omitempty" bson:"stations,omitempty"`
+	Meta     interface{} `json:"meta,omitempty" bson:"meta,omitempty"`
 }
 
 func (w *Region) toM() *mRegion {
 	return &mRegion{
-		typed:    typedRegion,
+		Typed:    typedRegion,
 		Id:       w.Id,
 		Name:     w.Name,
 		Stations: w.Stations,
@@ -70,4 +74,33 @@ func (w *Region) MarshalJSON() ([]byte, error) {
 		return json.Marshal(w.Id)
 	}
 	return json.Marshal(w.toM())
+}
+
+func (w *Region) UnmarshalBSONValue(typ bsontype.Type, data []byte) error {
+	if typ == bson.TypeString {
+		var id string
+		err := bson.UnmarshalValue(bson.TypeString, data, &id)
+		if err != nil {
+			return err
+		}
+		w.Id = id
+		w.Partial = true
+		return nil
+	}
+
+	w.Partial = false
+	var m mRegion
+	err := bson.Unmarshal(data, &m)
+	if err != nil {
+		return err
+	}
+	w.fromM(&m)
+	return nil
+}
+
+func (w Region) MarshalBSONValue() (bsontype.Type, []byte, error) {
+	if w.Partial {
+		return bson.MarshalValue(w.Id)
+	}
+	return bson.MarshalValue(w.toM())
 }

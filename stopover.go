@@ -2,6 +2,8 @@ package fptf
 
 import (
 	"encoding/json"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/bsontype"
 )
 
 // A Stopover represents a vehicle stopping at a stop/station at a specific time.
@@ -16,22 +18,22 @@ type Stopover struct {
 	Meta              interface{}
 }
 
-// intermediate, typed format used by marshal
+// intermediate, Typed format used by marshal
 type mStopover struct {
-	typed
-	StopStation       *StopStation `json:"stop"`
-	Arrival           TimeNullable `json:"arrival"`
-	ArrivalDelay      *int         `json:"arrivalDelay,omitempty"`
-	ArrivalPlatform   string       `json:"arrivalPlatform,omitempty"`
-	Departure         TimeNullable `json:"departure"`
-	DepartureDelay    *int         `json:"departureDelay,omitempty"`
-	DeparturePlatform string       `json:"departurePlatform,omitempty"`
-	Meta              interface{}  `json:"meta,omitempty"`
+	Typed             `bson:"inline"`
+	StopStation       *StopStation `json:"stop,omitempty" bson:"stop,omitempty"`
+	Arrival           TimeNullable `json:"arrival,omitempty" bson:"arrival,omitempty"`
+	ArrivalDelay      *int         `json:"arrivalDelay,omitempty" bson:"arrivalDelay,omitempty"`
+	ArrivalPlatform   string       `json:"arrivalPlatform,omitempty" bson:"arrivalPlatform,omitempty"`
+	Departure         TimeNullable `json:"departure,omitempty" bson:"departure,omitempty"`
+	DepartureDelay    *int         `json:"departureDelay,omitempty" bson:"departureDelay,omitempty"`
+	DeparturePlatform string       `json:"departurePlatform,omitempty" bson:"departurePlatform,omitempty"`
+	Meta              interface{}  `json:"meta,omitempty" bson:"meta,omitempty"`
 }
 
 func (s *Stopover) toM() *mStopover {
 	return &mStopover{
-		typed:             typedStopover,
+		Typed:             typedStopover,
 		StopStation:       s.StopStation,
 		Arrival:           s.Arrival,
 		ArrivalDelay:      s.ArrivalDelay,
@@ -69,4 +71,18 @@ func (s *Stopover) UnmarshalJSON(data []byte) error {
 
 func (s *Stopover) MarshalJSON() ([]byte, error) {
 	return json.Marshal(s.toM())
+}
+
+func (s *Stopover) UnmarshalBSONValue(typ bsontype.Type, data []byte) error {
+	var m mStopover
+	err := bson.UnmarshalValue(typ, data, &m)
+	if err != nil {
+		return err
+	}
+	s.fromM(&m)
+	return nil
+}
+
+func (s Stopover) MarshalBSONValue() (bsontype.Type, []byte, error) {
+	return bson.MarshalValue(s.toM())
 }
